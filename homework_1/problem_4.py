@@ -6,5 +6,4 @@ if __name__ == "__main__":
     settings = OptimalControlSettings()
     settings.limit_sig = True
     settings.N = 25
-    x = get_optimal(settings)
-    sim(settings,steps=100)
+    sim(settings, steps=100)
