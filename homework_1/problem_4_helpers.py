@@ -67,7 +67,7 @@ def construct_A_limit(Phi, Gamma, N, C):
     We also have some initial values z_0 which we handle by setting
     Ax[0:2] = z_0 -> A[0:2, 0:2] = I
     """
-    A_0= np.identity(3 * N + 2)  # identity
+    A_0 = np.identity(3 * N + 2)  # identity
     A_1 = np.zeros((3 * N + 2, 3 * N + 2))  # dynamics
     for k in range(N):  # Cheeky loop
         A_1[2 * k + 2:2 * k + 4, 2 * k:2 * k + 2] = Phi
@@ -81,6 +81,7 @@ def cost_function(x, H):
 
 
 def get_optimal(settings: OptimalControlSettings = OptimalControlSettings()):
+    # Construct H-matrix
     H = construct_H(settings.Phi, settings.Gamma, settings.N, settings.C, settings.q, settings.r)
 
     # Dynamics
@@ -98,21 +99,20 @@ def get_optimal(settings: OptimalControlSettings = OptimalControlSettings()):
         b = np.zeros(2 * settings.N + 2)
         b[0:2] = settings.z_0
         constr = scipy.optimize.LinearConstraint(A, lb=b, ub=b)
-    to_optim = lambda x: cost_function(x, H)
+
+    to_optim = lambda x: cost_function(x, H)  # Function to be optimised
     results = scipy.optimize.minimize(to_optim, x0=np.ones(3 * settings.N + 2), constraints=[constr])
-    print(results)
     return results.x
 
 
 def step(state, signal, settings: OptimalControlSettings, noise=True):
+    # Takes one timestep
     noise = np.zeros(2) if noise is False else np.array([0, np.random.normal(0, settings.noise_std)])
-    # ()
-    # (state, signal)
-    # (settings.Phi.dot(state) + settings.Gamma * signal)
     return settings.Phi.dot(state) + settings.Gamma * signal + noise
 
 
 def sim(settings: OptimalControlSettings = OptimalControlSettings(), steps=100):
+    # Controls the pendulum using MPC.
     state = settings.z_0
     settings = settings
     angles = [settings.z_0[0]]
@@ -130,6 +130,7 @@ def sim(settings: OptimalControlSettings = OptimalControlSettings(), steps=100):
 
 
 def plot_sim(angles, vels, signals, settings):
+    # Quick plot for realised paths.
     angles = np.array(angles)
     vel = np.array(vels)
     fig, axs = plt.subplots(3)
@@ -146,6 +147,7 @@ def plot_sim(angles, vels, signals, settings):
 
 
 def plot_x(x, N):
+    # Quick plot for predictions.
     angles = np.array([x[2 * k] for k in range(N)])
     vel = np.array([x[1 + 2 * k] for k in range(N)])
     fig, axs = plt.subplots(3)
