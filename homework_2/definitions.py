@@ -1,6 +1,6 @@
 import dataclasses
 from typing import Callable
-
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -64,3 +64,39 @@ class Config:
     def phi(self, x: np.ndarray):
         diff = x[:2] - self.x_e
         return diff.dot(diff)
+
+
+def split_result(x: np.ndarray, config: Config):
+    ret_f = []
+    ret_l = []
+    for k in range(config.N):
+        ret_f.append(x[4 * k:4 * k + 2])
+        ret_l.append(x[4 * k + 2: 4 * (k + 1)])
+    return np.array(ret_f).transpose(), np.array(ret_l).transpose()
+
+
+def plot_results(results, config):
+    follower, leader = split_result(results.x, config)
+    plt.plot(follower[0, :], follower[1, :], label="Follower Trajectory")
+    plt.plot(leader[0, :], leader[1, :], label="Leader Trajectory")
+    plt.scatter([config.x_f[0]], [config.x_f[1]], label="Follower initial state")
+    plt.scatter([config.x_l[0]], [config.x_l[1]], label="Leader initial state")
+    plt.scatter([config.x_e[0]], [config.x_e[1]], label="Exit")
+
+    if config.circles is not None:
+        for c in config.circles:
+            thetas = np.arange(0, 2 * np.pi, 0.1)
+            x_s = c.radius * np.cos(thetas) + c.point[0]
+            y_s = c.radius * np.sin(thetas) + c.point[1]
+            plt.plot(x_s, y_s, linestyle="--", color="black")
+
+    plt.legend()
+
+
+def plot_signal(u, config):
+    times = np.arange(1, config.N + 1) * config.dt
+    u = u.reshape(-1, 2).transpose()
+    plt.plot(times, u[0, :], label="u_x")
+    plt.plot(times, u[1, :], label="u_y")
+    plt.legend()
+    plt.xlabel("Time")
